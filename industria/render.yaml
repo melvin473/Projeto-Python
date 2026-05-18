@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: plataforma-preditiva
+    name: Plataforma-Preditiva
     env: python
     buildCommand: |
       pip install -r requirements.txt
