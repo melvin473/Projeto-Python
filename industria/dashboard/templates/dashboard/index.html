@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma de Monitoramento Preditivo</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --border-color: #e2e8f0;
+            --accent-blue: #0284c7;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 20px; }
+        .container { max-width: 1240px; margin: 0 auto; }
+        header { margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; }
+        header h1 { margin: 0; font-size: 24px; }
+        header p { margin: 5px 0 0 0; color: #64748b; font-size: 14px; }
+
+        .tab-container { display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); }
+        .tab-btn { background: none; border: none; padding: 12px 24px; font-size: 15px; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+        .tab-btn:hover { color: var(--accent-blue); }
+        .tab-btn.active { color: var(--accent-blue); border-bottom: 3px solid var(--accent-blue); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .mini-card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .mini-card h3 { margin: 0 0 10px 0; font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; }
+        .mini-card .valor { font-size: 20px; font-weight: bold; margin: 0; }
+        
+        .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 14px; font-weight: bold; }
+        .status-NORMAL { background-color: #dcfce7; color: #15803d; }
+        .status-ALERTA { background-color: #fef9c3; color: #a16207; }
+        .status-CRÍTICO { background-color: #fee2e2; color: #b91c1c; }
+
+        /* CORREÇÃO: Estrutura em coluna para layout um abaixo do outro */
+        .coluna-graficos { display: flex; flex-direction: column; gap: 20px; }
+        .chart-card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box;}
+
+        .upload-panel { background-color: #f0fdf4; border: 1px dashed #bbf7d0; border-radius: 8px; padding: 20px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; }
+        .upload-form { display: flex; gap: 10px; align-items: center; }
+        .btn-submit { background-color: #16a34a; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        
+        @media (max-width: 768px) { .upload-panel { flex-direction: column; gap: 15px; align-items: flex-start; } .upload-form { width: 100%; flex-direction: column; align-items: stretch; } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Plataforma de Monitoramento Preditivo</h1>
+            <p>Banco de Dados MFPT</p>
+        </header>
+
+        <div class="tab-container">
+            <button class="tab-btn active" onclick="switchTab(event, 'tempo-real')">⏱️ Tempo Real (API)</button>
+            <button class="tab-btn" id="tab-diag-btn" onclick="switchTab(event, 'diagnostico')">🔬 Análise de Diagnóstico (Arquivo .mat)</button>
+            <button class="tab-btn" onclick="switchTab(event, 'ajuda')">❓ Ajuda</button>
+        </div>
+
+        <div id="ajuda" class="tab-content">
+            <div style="background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                
+                <h2 style="margin-top: 0; color: var(--accent-blue); font-size: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;">
+                    📚 Guia do Usuário
+                </h2>
+                
+                <p style="line-height: 1.6; color: #475569;">
+                    Esta plataforma é um Sistema Especialista em Manutenção Preditiva, projetado para monitorar, diagnosticar e analisar a saúde mecânica de ativos rotativos (motores elétricos e rolamentos). O motor matemático do sistema foi validado utilizando a base de dados internacional do MFPT (Machinery Failure Prevention Technology), focando na identificação precoce de falhas em rolamentos de esferas.
+                </p>
+
+                <h3 style="color: var(--text-main); font-size: 16px; margin-top: 25px;">⏱️ 1. Aba: Monitoramento em Tempo Real (API)</h3>
+                <p style="line-height: 1.6; color: #475569; margin-left: 10px;">
+                    Exibe os dados armazenados em um banco de dados SQLite. O banco de dados é alimentado por uma API REST.
+                </p>
+                <ul style="line-height: 1.6; color: #475569; padding-left: 25px;">
+                    <li><strong>Velocidade RMS:</strong> Métrica global que indica a energia de vibração da máquina, com as indicações de cores (Zonas Verde/Normal, Amarela/Alerta e Vermelha/Crítico) baseadas na norma internacional <strong>ISO 10816-3</strong></li>
+                    <li><strong>Kurtosis:</strong> Indicador estatístico de sensibilidade a impactos agudos. Essencial para identificar o início de descascamento ou trincas em pistas de rolamento, onde o RMS ainda não se alterou.</li>
+                    <li><strong>Skewness:</strong> Mede a assimetria do sinal em relação à média zero. Alterações abruptas indicam falta de uniformidade ou forças unidirecionais agindo no ativo.</li>
+                    <li><strong>Gráfico de Tendência:</strong> Permite visualizar a evolução temporal do ativo para traçar o tempo de vida útil restante antes de uma falha.</li>
+                </ul>
+
+                <h3 style="color: var(--text-main); font-size: 16px; margin-top: 25px;">🔬 2. Aba: Análise de Diagnóstico Avançado (arquivo .mat)</h3>
+                <p style="line-height: 1.6; color: #475569; margin-left: 10px;">
+                    Utilize esta aba para analisar o sinal mecânico através do upload de um arquivo binário bruto estruturado (<code>.mat</code>).
+                </p>
+                <ul style="line-height: 1.6; color: #475569; padding-left: 25px;">
+                    <li><strong>Espectro de Frequência (FFT - Transformada Rápida de Fourier):</strong> Decompõe a onda temporal complexa em suas frequências componentes (Hz). Permite correlacionar os picos de vibração com as frequências geométricas de defeito (BPFI, BPFO, BSF, FTF) para apontar a origem da falha.</li>
+                    <li><strong>Demodulação por Envelope (Análise de Impactos):</strong> Aplica a Transformada de Hilbert para remover as frequências de ressonância estrutural e isolar os impactos puramente mecânicos repetitivos. É uma ferramenta poderosa para o diagnóstico preciso de defeitos em estágios iniciais.</li>
+                </ul>
+
+                <h3 style="color: var(--text-main); font-size: 16px; margin-top: 25px;">🛠️ Arquitetura do Projeto</h3>
+                <p style="line-height: 1.6; color: #475569; margin-left: 10px;">
+                    A arquitetura combina uma API para receber os dados em formato JSON e armazenar em um banco de dados para exibição, e entrada para um arquivo .mat, que é processado no servidor e tem as métricas enviadas para exibição.
+                </p>
+
+                <div style="margin-top: 30px; background-color: #eff6ff; border: 1px solid #bfdbfe; padding: 15px; border-radius: 6px; text-align: center; color: #1e40af; font-size: 13px; font-weight: 500;">
+                    Desenvolvido como solução modular integrada para Indústria 4.0.
+                </div>
+
+            </div>
+        </div>
+
+        <div id="tempo-real" class="tab-content active">
+            <div class="grid-cards">
+                <div class="mini-card">
+                    <h3>Velocidade RMS</h3>
+                    <p class="valor">{{ v_rms }} mm/s</p>
+                </div>
+                <div class="mini-card">
+                    <h3>Aceleração Global</h3>
+                    <p class="valor">{{ acc_rms }} g</p>
+                </div>
+                <div class="mini-card">
+                    <h3>Kurtosis</h3>
+                    <p class="valor" style="color: #0369a1;">{{ kurtosis }}</p>
+                </div>
+                <div class="mini-card">
+                    <h3>Skewness</h3>
+                    <p class="valor" style="color: #0d9488;">{{ skewness }}</p>
+                </div>
+                <div class="mini-card">
+                    <h3>Status ISO 10816-3</h3>
+                    <p style="margin: 5px 0 0 0;"><span class="status-badge status-{{ status_iso }}">{{ status_iso }}</span></p>
+                </div>
+            </div>
+
+            <div class="coluna-graficos">
+                <div class="chart-card">{{ grafico_gauge|safe }}</div>
+                <div class="chart-card">{{ grafico_tendencia|safe }}</div>
+            </div>
+        </div>
+
+        <div id="diagnostico" class="tab-content">
+            <div class="upload-panel">
+                <div>
+                    <h3 style="margin:0 0 5px 0; color: #166534;">Análise Espectral sob Demanda</h3>
+                    <p style="margin: 0; font-size: 13px; color: #166534;">Carregue um arquivo ou use a amostra.</p>
+                </div>
+                
+                <form class="upload-form" method="POST" enctype="multipart/form-data" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    {% csrf_token %}
+                    <input type="file" name="arquivo_mat" accept=".mat">
+                    <button type="submit" name="action" value="upload" class="btn-submit">Processar FFT e Envelope</button>
+                    
+                    <button type="submit" name="action" value="demo" class="btn-submit" style="background-color: #0284c7;">
+                        🚀 Carregar Amostra Padrão
+                    </button>
+                </form>
+            </div>
+
+            {% if grafico_fft %}
+                <div class="grid-cards" style="margin-bottom: 20px;">
+                    <div class="mini-card" style="background-color: #f8fafc; border-color: #cbd5e1;">
+                        <h3>Arquivo Analisado</h3>
+                        <p class="valor" style="font-size: 14px; color: #475569; word-break: break-all;">{{ arquivo_analisado }}</p>
+                    </div>
+                    <div class="mini-card">
+                        <h3>Kurtosis do Arquivo</h3>
+                        <p class="valor" style="color: #b91c1c;">{{ file_kurtosis }}</p>
+                        <small style="color: #64748b;">(Normal: ~3.0)</small>
+                    </div>
+                    <div class="mini-card">
+                        <h3>Skewness do Arquivo</h3>
+                        <p class="valor" style="color: #d97706;">{{ file_skewness }}</p>
+                    </div>
+                    <div class="mini-card">
+                        <h3>Frequência Amostragem</h3>
+                        <p class="valor" style="font-size: 18px;">{{ file_fs }} Hz</p>
+                    </div>
+                </div>
+
+                <div class="coluna-graficos">
+                    <div class="chart-card">{{ grafico_fft|safe }}</div>
+                    <div class="chart-card">{{ grafico_envelope|safe }}</div>
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 40px; color: #64748b; background: #ffffff; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <p style="margin: 0; font-size: 15px;">Nenhum arquivo processado nesta sessão. Faça o upload de um arquivo .mat ou selecione um dos exemplos.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+    // 1. Função para alternar as abas e salvar a preferência do usuário no navegador
+    function switchTab(event, tabId) {
+        // Esconde todos os conteúdos das abas
+        const contents = document.querySelectorAll('.tab-content');
+        contents.forEach(content => content.classList.remove('active'));
+        
+        // Desativa visualmente todos os botões de abas
+        const buttons = document.querySelectorAll('.tab-btn');
+        buttons.forEach(btn => btn.classList.remove('active'));
+
+        // Ativa o conteúdo da div correspondente à aba selecionada
+        const targetContent = document.getElementById(tabId);
+        if (targetContent) {
+            targetContent.classList.add('active');
+        }
+        
+        // Ativa o botão correspondente
+        if (event && event.currentTarget) {
+            event.currentTarget.classList.add('active');
+        } else {
+            // Se a função for chamada via código no reload, localiza o botão pelo atributo ou ID
+            if (tabId === 'tempo-real') {
+                const btnReal = document.querySelector('.tab-btn[onclick*="tempo-real"]');
+                if (btnReal) btnReal.classList.add('active');
+            } else if (tabId === 'diagnostico') {
+                const btnDiag = document.getElementById('tab-diag-btn');
+                if (btnDiag) btnDiag.classList.add('active');
+            } else if (tabId === 'ajuda') {
+                const btnAjuda = document.querySelector('.tab-btn[onclick*="ajuda"]');
+                if (btnAjuda) btnAjuda.classList.add('active');
+            }
+        }
+
+        // Salva o estado da aba atual na memória do navegador
+        localStorage.setItem('abaAtiva', tabId);
+
+        // Força o Plotly a recalcular o tamanho dos gráficos para ocuparem 100% da largura da tela
+        setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+        }, 50);
+    }
+
+    // 2. NOVO: Evento executado assim que todo o HTML/DOM estiver 100% pronto na tela
+    document.addEventListener("DOMContentLoaded", function() {
+        // Detecta se a página foi recarregada após o clique em qualquer botão do formulário (POST)
+        const ehRequisicaoPost = "{{ request.method }}" === "POST";
+        const ultimaAbaSalva = localStorage.getItem('abaAtiva');
+
+        if (ehRequisicaoPost) {
+            // Se houve clique em "Processar" ou "Carregar Amostra", FORÇA a abertura no Diagnóstico
+            switchTab(null, 'diagnostico');
+        } else if (ultimaAbaSalva) {
+            // Se foi apenas um F5 comum ou navegação, mantém onde o usuário estava
+            switchTab(null, ultimaAbaSalva);
+        } else {
+            // Se for o primeiro acesso à aplicação, abre o Tempo Real por padrão
+            switchTab(null, 'tempo-real');
+        }
+    });
+</script>
+</body>
+</html>
