@@ -3,3 +3,4 @@ djangorestframework
 numpy
 scipy
 plotly
+gunicorn
